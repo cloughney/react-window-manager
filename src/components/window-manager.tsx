@@ -1,13 +1,13 @@
 import * as React from 'react';
 import ActivityWindow, { Activity, ActivityProps, OpenWindow, WindowAction } from './activity-window';
 
-export type Props = {
+export type WindowManagerProps = {
 	availableActivities: Activity[];
 	openWindows: OpenWindow[];
 	onWindowAction: (action: WindowAction, window: OpenWindow, options?: any) => void; //TODO types for options
 }
 
-const WindowManager: React.SFC<Props> = (props: Props): JSX.Element => {
+const WindowManager: React.SFC<WindowManagerProps> = (props: WindowManagerProps): JSX.Element => {
 	const openWindows = props.openWindows
 		.filter(x => !x.position.isMinimized)
 		.map((openWindow, i) => (

@@ -24,23 +24,23 @@ const getActivityWindowStyle = (depth: number, position: WindowPosition): React.
 	return styles;
 }
 
-export type Props = {
+export type ActivityWindowProps = {
 	availableActivities: ActivityProps['availableActivities'];
 	window: OpenWindow;
 	depth: number;
 	onWindowAction: ActivityProps['onWindowAction'];
 }
 
-export type State = {
+export type ActivityWindowState = {
 	readonly isMoving: boolean;
 	readonly offset: { top: number, left: number };
 	readonly windowStyle: React.CSSProperties;
 }
 
-export default class ActivityWindow extends React.Component<Props, State> {
+export default class ActivityWindow extends React.Component<ActivityWindowProps, ActivityWindowState> {
 	private element?: HTMLDivElement | null;
 
-	public constructor(props: Props) {
+	public constructor(props: ActivityWindowProps) {
 		super(props);
 		this.state = {
 			isMoving: false,
@@ -81,14 +81,14 @@ export default class ActivityWindow extends React.Component<Props, State> {
 		);
 	}
 
-	public componentWillReceiveProps(props: Props): void {
+	public componentWillReceiveProps(props: ActivityWindowProps): void {
 		this.setState(state => ({
 			...state,
 			windowStyle: getActivityWindowStyle(props.depth, props.window.position)
 		}));
 	}
 
-	public componentDidUpdate(props: Props, state: State): void {
+	public componentDidUpdate(props: ActivityWindowProps, state: ActivityWindowState): void {
 		if (!state.isMoving && this.state.isMoving) {
 			document.addEventListener('mousemove', this.onMouseMove);
 			document.addEventListener('mouseup', this.onMouseUp);

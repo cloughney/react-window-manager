@@ -1,13 +1,13 @@
 /// <reference types="react" />
 import * as React from 'react';
 import { ActivityProps, OpenWindow } from './types';
-export declare type Props = {
+export declare type ActivityWindowProps = {
     availableActivities: ActivityProps['availableActivities'];
     window: OpenWindow;
     depth: number;
     onWindowAction: ActivityProps['onWindowAction'];
 };
-export declare type State = {
+export declare type ActivityWindowState = {
     readonly isMoving: boolean;
     readonly offset: {
         top: number;
@@ -15,13 +15,13 @@ export declare type State = {
     };
     readonly windowStyle: React.CSSProperties;
 };
-export default class ActivityWindow extends React.Component<Props, State> {
+export default class ActivityWindow extends React.Component<ActivityWindowProps, ActivityWindowState> {
     private element?;
-    constructor(props: Props);
+    constructor(props: ActivityWindowProps);
     private readonly windowClassName;
     render(): JSX.Element;
-    componentWillReceiveProps(props: Props): void;
-    componentDidUpdate(props: Props, state: State): void;
+    componentWillReceiveProps(props: ActivityWindowProps): void;
+    componentDidUpdate(props: ActivityWindowProps, state: ActivityWindowState): void;
     private onDragStart;
     private onMouseDown;
     private onMouseOver;
