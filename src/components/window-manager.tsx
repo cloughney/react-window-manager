@@ -21,8 +21,10 @@ const WindowManager: React.SFC<WindowManagerProps> = (props: WindowManagerProps)
 		.filter(x => x.position.isMinimized)
 		.map((openWindow, i) => (
 			<li onClick={ () => { props.onWindowAction(WindowAction.Restore, openWindow) } } key={ i }>
-				{ openWindow.activity.icon ? <i className={ `fa fa-${openWindow.activity.icon}` } /> : undefined }
-				{ openWindow.activity.title }
+				<button>
+					{ openWindow.activity.icon ? <i className={ `fa fa-${openWindow.activity.icon}` } /> : undefined }
+					{ openWindow.activity.title }
+				</button>
 			</li>
 		));
 
