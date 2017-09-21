@@ -5,6 +5,8 @@ export declare type ActivityWindowProps = {
     availableActivities: ActivityProps['availableActivities'];
     window: OpenWindow;
     depth: number;
+    onFocus: () => void;
+    onDragStart: () => void;
     onWindowAction: ActivityProps['onWindowAction'];
 };
 export declare type ActivityWindowState = {

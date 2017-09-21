@@ -6,5 +6,13 @@ export declare type WindowManagerProps = {
     openWindows: OpenWindow[];
     onWindowAction: (action: WindowAction, window: OpenWindow, options?: any) => void;
 };
-declare const WindowManager: React.SFC<WindowManagerProps>;
-export default WindowManager;
+export declare type WindowManagerState = {
+    activeWindow?: OpenWindow & {
+        element: HTMLElement;
+    };
+};
+export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
+    constructor(props: WindowManagerProps);
+    render(): JSX.Element;
+    private onFocus;
+}

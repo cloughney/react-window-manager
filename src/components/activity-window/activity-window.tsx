@@ -28,6 +28,8 @@ export type ActivityWindowProps = {
 	availableActivities: ActivityProps['availableActivities'];
 	window: OpenWindow;
 	depth: number;
+	onFocus: (window: OpenWindow, element: HTMLElement) => void;
+	onDragStart: (window: OpenWindow, element: HTMLElement) => void;
 	onWindowAction: ActivityProps['onWindowAction'];
 }
 
@@ -38,7 +40,7 @@ export type ActivityWindowState = {
 }
 
 export default class ActivityWindow extends React.Component<ActivityWindowProps, ActivityWindowState> {
-	private element?: HTMLDivElement | null;
+	private element?: HTMLElement | null;
 
 	public constructor(props: ActivityWindowProps) {
 		super(props);
@@ -88,16 +90,6 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 		}));
 	}
 
-	public componentDidUpdate(props: ActivityWindowProps, state: ActivityWindowState): void {
-		if (!state.isMoving && this.state.isMoving) {
-			document.addEventListener('mousemove', this.onMouseMove);
-			document.addEventListener('mouseup', this.onMouseUp);
-		} else if (state.isMoving && !this.state.isMoving) {
-			document.removeEventListener('mousemove', this.onMouseMove);
-			document.removeEventListener('mouseup', this.onMouseUp);
-		}
-	}
-
 	private onDragStart = (e: React.MouseEvent<any>): void => {
 		if (this.state.isMoving || this.props.window.position.isMaximized || !this.element) { return; }
 		e.preventDefault();
@@ -113,7 +105,7 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 
 	private onMouseDown = (e: React.MouseEvent<any>): void => {
 		if (this.props.depth !== 0) {
-			this.props.onWindowAction(WindowAction.Focus);
+			this.props.onFocus(this.props.window, this.element as HTMLElement);
 		}
 	}
 
@@ -140,32 +132,5 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 		// } else if (-10 <= rightOffset && rightOffset <= 10) {
 		// 	console.log('right edge');
 		// }
-	}
-
-	private onMouseUp = (e: MouseEvent): void => {
-		if (!this.state.isMoving || this.props.window.position.isMaximized || !this.element) { return; }
-		e.preventDefault();
-
-		this.setState({ isMoving: false });
-		this.props.onWindowAction(WindowAction.Move, {
-			x: this.element.offsetLeft,
-			y: this.element.offsetTop
-		});
-	}
-
-	private onMouseMove = (e: MouseEvent): void => {
-		if (!this.state.isMoving) { return; }
-		e.preventDefault();
-
-		const x = e.clientX - this.state.offset.left;
-		const y = e.clientY - this.state.offset.top;
-
-		this.setState((state, props) => ({
-			...state,
-			windowStyle: getActivityWindowStyle(props.depth, {
-				...props.window.position,
-				x, y
-			})
-		}));
 	}
 }
