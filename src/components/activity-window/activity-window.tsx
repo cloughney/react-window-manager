@@ -24,18 +24,15 @@ const getActivityWindowStyle = (depth: number, position: WindowPosition): React.
 	return styles;
 }
 
-export type ActivityWindowProps = {
-	availableActivities: ActivityProps['availableActivities'];
+export type ActivityWindowProps = ActivityProps & {
 	window: OpenWindow;
 	depth: number;
 	onFocus: (window: OpenWindow, element: HTMLElement) => void;
-	onDragStart: (window: OpenWindow, element: HTMLElement) => void;
-	onWindowAction: ActivityProps['onWindowAction'];
+	onDragStart: (window: OpenWindow, element: HTMLElement, offset: { x: number, y: number }) => void;
 }
 
 export type ActivityWindowState = {
 	readonly isMoving: boolean;
-	readonly offset: { top: number, left: number };
 	readonly windowStyle: React.CSSProperties;
 }
 
@@ -46,7 +43,6 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 		super(props);
 		this.state = {
 			isMoving: false,
-			offset: { top: 0, left: 0 },
 			windowStyle: getActivityWindowStyle(props.depth, props.window.position)
 		};
 	}
@@ -90,22 +86,24 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 		}));
 	}
 
-	private onDragStart = (e: React.MouseEvent<any>): void => {
-		if (this.state.isMoving || this.props.window.position.isMaximized || !this.element) { return; }
+	private onDragStart = (e: React.MouseEvent<HTMLElement>): void => {
+		if (this.props.window.position.isMaximized || !this.element) { return; }
 		e.preventDefault();
 
-		const top = e.clientY - this.element.offsetTop;
-		const left = e.clientX - this.element.offsetLeft;
+		const offset = {
+			x: e.clientX - this.element.offsetLeft,
+			y: e.clientY - this.element.offsetTop
+		};
 
-		this.setState({
-			isMoving: true,
-			offset: { top, left }
-		});
+		this.setState({ isMoving: true });
+		this.props.onDragStart(this.props.window, this.element, offset);
 	}
 
 	private onMouseDown = (e: React.MouseEvent<any>): void => {
+		if (!this.element) { return; }
+
 		if (this.props.depth !== 0) {
-			this.props.onFocus(this.props.window, this.element as HTMLElement);
+			this.props.onFocus(this.props.window, this.element);
 		}
 	}
 

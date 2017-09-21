@@ -1,20 +1,17 @@
 /// <reference types="react" />
 import * as React from 'react';
 import { ActivityProps, OpenWindow } from './types';
-export declare type ActivityWindowProps = {
-    availableActivities: ActivityProps['availableActivities'];
+export declare type ActivityWindowProps = ActivityProps & {
     window: OpenWindow;
     depth: number;
-    onFocus: () => void;
-    onDragStart: () => void;
-    onWindowAction: ActivityProps['onWindowAction'];
+    onFocus: (window: OpenWindow, element: HTMLElement) => void;
+    onDragStart: (window: OpenWindow, element: HTMLElement, offset: {
+        x: number;
+        y: number;
+    }) => void;
 };
 export declare type ActivityWindowState = {
     readonly isMoving: boolean;
-    readonly offset: {
-        top: number;
-        left: number;
-    };
     readonly windowStyle: React.CSSProperties;
 };
 export default class ActivityWindow extends React.Component<ActivityWindowProps, ActivityWindowState> {
@@ -23,10 +20,7 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
     private readonly windowClassName;
     render(): JSX.Element;
     componentWillReceiveProps(props: ActivityWindowProps): void;
-    componentDidUpdate(props: ActivityWindowProps, state: ActivityWindowState): void;
     private onDragStart;
     private onMouseDown;
     private onMouseOver;
-    private onMouseUp;
-    private onMouseMove;
 }

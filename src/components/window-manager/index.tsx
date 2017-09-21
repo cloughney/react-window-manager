@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ActivityWindow, { Activity, ActivityProps, OpenWindow, WindowAction } from './activity-window';
+import ActivityWindow, { Activity, ActivityProps, OpenWindow, WindowAction } from '../activity-window';
 
 export type WindowManagerProps = {
 	availableActivities: Activity[];
@@ -8,7 +8,11 @@ export type WindowManagerProps = {
 }
 
 export type WindowManagerState = {
-	activeWindow?: OpenWindow & { element: HTMLElement, isMoving: boolean };
+	activeWindow?: OpenWindow & {
+		element: HTMLElement;
+		isMoving: boolean;
+		mouseOffset: { x: number, y: number };
+	}
 }
 
 export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
@@ -19,26 +23,26 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 
 	public render(): JSX.Element {
 		const openWindows = this.props.openWindows
-		.filter(x => !x.position.isMinimized)
-		.map((openWindow, i) => (
-			<ActivityWindow
-				key={ i } depth={ i } window={ openWindow }
-				availableActivities={ this.props.availableActivities }
-				onFocus={ this.onWindowFocus }
-				onDragStart={ this.onWindowDragStart }
-				onWindowAction={ (action, options) => { this.props.onWindowAction(action, openWindow, options) } } />
-			));
+			.filter(x => !x.position.isMinimized)
+			.map((openWindow, i) => (
+				<ActivityWindow
+					key={ i } depth={ i } window={ openWindow }
+					availableActivities={ this.props.availableActivities }
+					onFocus={ this.onWindowFocus }
+					onDragStart={ this.onWindowDragStart }
+					onWindowAction={ (action, options) => { this.props.onWindowAction(action, openWindow, options) } } />
+				));
 
-	const dockedWindows = this.props.openWindows
-		.filter(x => x.position.isMinimized)
-		.map((openWindow, i) => (
-			<li onClick={ () => { this.props.onWindowAction(WindowAction.Restore, openWindow) } } key={ i }>
-				<button>
-					{ openWindow.activity.icon ? <i className={ `fa fa-${openWindow.activity.icon}` } /> : undefined }
-					{ openWindow.activity.title }
-				</button>
-			</li>
-		));
+		const dockedWindows = this.props.openWindows
+			.filter(x => x.position.isMinimized)
+			.map((openWindow, i) => (
+				<li onClick={ () => { this.props.onWindowAction(WindowAction.Restore, openWindow) } } key={ i }>
+					<button>
+						{ openWindow.activity.icon ? <i className={ `fa fa-${openWindow.activity.icon}` } /> : undefined }
+						{ openWindow.activity.title }
+					</button>
+				</li>
+			));
 
 		return (
 			<div>
@@ -64,11 +68,24 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 	}
 
 	private onWindowFocus = (openWindow: OpenWindow, element: HTMLElement): void => {
-		this.setState({ activeWindow: { ...openWindow, element, isMoving: false } });
+		this.setState({
+			activeWindow: {
+				...openWindow,
+				element,
+				isMoving: false,
+				mouseOffset: { x: 0, y: 0 }
+			}
+		});
 	}
 
-	private onWindowDragStart = (openWindow: OpenWindow, element: HTMLElement): void => {
-		this.setState(state => ({ activeWindow: { ...state.activeWindow, isMoving: true } }));
+	private onWindowDragStart = (openWindow: OpenWindow, element: HTMLElement, mouseOffset: { x: number, y: number }): void => {
+		this.setState(state => ({
+			activeWindow: {
+				...state.activeWindow,
+				isMoving: true,
+				mouseOffset
+			}
+		}));
 	}
 
 	private onMouseUp = (e: MouseEvent): void => {
@@ -79,7 +96,14 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 
 		e.preventDefault();
 
-		this.setState({ activeWindow: { ...activeWindow, isMoving: false } });
+		this.setState({
+			activeWindow: {
+				...activeWindow,
+				isMoving: false,
+				mouseOffset: { x: 0, y: 0 }
+			}
+		});
+
 		this.props.onWindowAction(WindowAction.Move, activeWindow, {
 			x: activeWindow.element.offsetLeft,
 			y: activeWindow.element.offsetTop
@@ -94,15 +118,14 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 		
 		e.preventDefault();
 
-		// const x = e.clientX - this.state.offset.left;
-		// const y = e.clientY - this.state.offset.top;
+		const x = e.clientX - activeWindow.mouseOffset.x;
+		const y = e.clientY - activeWindow.mouseOffset.y;
 
-		// this.setState((state, props) => ({
-		// 	...state,
-		// 	windowStyle: getActivityWindowStyle(props.depth, {
-		// 		...props.window.position,
-		// 		x, y
-		// 	})
-		// }));
+		this.setState((state, props) => ({
+			activeWindow: {
+				...activeWindow,
+				position: { ...activeWindow.position, x, y }
+			}
+		}));
 	}
 }
