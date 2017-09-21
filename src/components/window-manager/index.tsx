@@ -1,42 +1,60 @@
 import * as React from 'react';
-import ActivityWindow, { Activity, ActivityProps, OpenWindow, WindowAction } from '../activity-window';
+import ActivityWindow, { Activity, ActivityProps, OpenWindow, WindowAction, WindowPosition } from '../activity-window';
 
 export type WindowManagerProps = {
 	availableActivities: Activity[];
 	openWindows: OpenWindow[];
-	onWindowAction: (action: WindowAction, window: OpenWindow, options?: any) => void; //TODO types for options
+	//onWindowAction: (action: WindowAction, window: OpenWindow, options?: any) => void; //TODO types for options
+}
+
+export type ActiveWindow = {
+	window: OpenWindow;
+	element: HTMLElement;
+	isMoving: boolean;
+	mouseOffset: { x: number, y: number };
 }
 
 export type WindowManagerState = {
-	activeWindow?: OpenWindow & {
-		element: HTMLElement;
-		isMoving: boolean;
-		mouseOffset: { x: number, y: number };
-	}
+	availableActivities: Activity[];
+	openWindows: OpenWindow[];
+	activeWindow?: ActiveWindow;
 }
+
+const defaultPosition: WindowPosition = {
+	x: 0,
+	y: 0,
+	width: 500,
+	height: 300,
+	isMaximized: true,
+	isMinimized: false
+};
 
 export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
 	public constructor(props: WindowManagerProps) {
 		super(props);
-		this.state = { activeWindow: undefined };
+		this.state = {
+			availableActivities: props.availableActivities || [],
+			openWindows: props.openWindows || [],
+			activeWindow: undefined
+		};
 	}
 
 	public render(): JSX.Element {
-		const openWindows = this.props.openWindows
+		const openWindows = this.state.openWindows
 			.filter(x => !x.position.isMinimized)
 			.map((openWindow, i) => (
 				<ActivityWindow
 					key={ i } depth={ i } window={ openWindow }
-					availableActivities={ this.props.availableActivities }
+					availableActivities={ this.state.availableActivities }
 					onFocus={ this.onWindowFocus }
 					onDragStart={ this.onWindowDragStart }
-					onWindowAction={ (action, options) => { this.props.onWindowAction(action, openWindow, options) } } />
+					onWindowAction={ (action, options) => { this.onWindowAction(action, openWindow, options) } } />
 				));
 
-		const dockedWindows = this.props.openWindows
+		const dockedWindows = this.state.openWindows
 			.filter(x => x.position.isMinimized)
 			.map((openWindow, i) => (
-				<li onClick={ () => { this.props.onWindowAction(WindowAction.Restore, openWindow) } } key={ i }>
+				<li onClick={ () => { this.onWindowAction(WindowAction.Restore, openWindow) } } key={ i }>
 					<button>
 						{ openWindow.activity.icon ? <i className={ `fa fa-${openWindow.activity.icon}` } /> : undefined }
 						{ openWindow.activity.title }
@@ -68,16 +86,18 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 	}
 
 	private onWindowFocus = (openWindow: OpenWindow, element: HTMLElement): void => {
-		//TODO move redux stuff into here
-
-		this.setState({
+		this.setState(state => ({
+			openWindows: [
+				openWindow,
+				...state.openWindows.filter(x => x !== openWindow)
+			],
 			activeWindow: {
-				...openWindow,
+				window: openWindow,
 				element,
 				isMoving: false,
 				mouseOffset: { x: 0, y: 0 }
 			}
-		});
+		}));
 	}
 
 	private onWindowDragStart = (openWindow: OpenWindow, element: HTMLElement, mouseOffset: { x: number, y: number }): void => {
@@ -98,19 +118,11 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 		}
 
 		e.preventDefault();
+		
+		const x = e.clientX - activeWindow.mouseOffset.x;
+		const y = e.clientY - activeWindow.mouseOffset.y;
 
-		this.setState({
-			activeWindow: {
-				...activeWindow,
-				isMoving: false,
-				mouseOffset: { x: 0, y: 0 }
-			}
-		});
-
-		this.props.onWindowAction(WindowAction.Move, activeWindow, {
-			x: activeWindow.element.offsetLeft,
-			y: activeWindow.element.offsetTop
-		});
+		this.setActiveWindowPosition({ x, y }, { isMoving: false, mouseOffset: { x: 0, y: 0 } });
 	}
 
 	private onMouseMove = (e: MouseEvent): void => {
@@ -126,5 +138,54 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 
 		activeWindow.element.style.left = `${x}px`;
 		activeWindow.element.style.top = `${y}px`;
+	}
+
+	private onWindowAction = (action: WindowAction, openWindow: OpenWindow, options?: any): void => {
+		switch (action) {
+			case WindowAction.Open:
+				return this.setState(state => ({
+					openWindows: [
+						{
+							activity: options.activity,
+							position: { ...defaultPosition }
+						},
+						...state.openWindows
+					]
+				}));
+			case WindowAction.Close:
+				return this.setState(state => ({
+					openWindows: state.openWindows.filter(x => x !== openWindow)
+				}));
+
+			case WindowAction.Restore:
+				return this.setActiveWindowPosition({ isMaximized: false, isMinimized: false });
+			case WindowAction.Maximize:
+				return this.setActiveWindowPosition({ isMaximized: true, isMinimized: false });
+			case WindowAction.Minimize:
+				return this.setActiveWindowPosition({ isMaximized: false, isMinimized: true });
+		}
+	}
+
+	private setActiveWindowPosition(positionUpdates: Partial<WindowPosition>, windowUpdates?: Partial<ActiveWindow>): void {
+		this.setState(state => {
+			if (!state.activeWindow) {
+				return;
+			}
+
+			const activeWindow = state.activeWindow;
+			const position = { ...activeWindow.window.position, ...positionUpdates };
+
+			return {
+				activeWindow: {
+					...activeWindow,
+					...windowUpdates,
+					position
+				},
+				openWindows: state.openWindows.map(openWindow => {
+					if (openWindow !== activeWindow.window) { return openWindow; }
+					return { ...openWindow, position };
+				})
+			};
+		});
 	}
 }
