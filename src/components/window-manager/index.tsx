@@ -68,6 +68,8 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 	}
 
 	private onWindowFocus = (openWindow: OpenWindow, element: HTMLElement): void => {
+		//TODO move redux stuff into here
+
 		this.setState({
 			activeWindow: {
 				...openWindow,
@@ -82,6 +84,7 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 		this.setState(state => ({
 			activeWindow: {
 				...state.activeWindow,
+				element,
 				isMoving: true,
 				mouseOffset
 			}
@@ -121,11 +124,7 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 		const x = e.clientX - activeWindow.mouseOffset.x;
 		const y = e.clientY - activeWindow.mouseOffset.y;
 
-		this.setState((state, props) => ({
-			activeWindow: {
-				...activeWindow,
-				position: { ...activeWindow.position, x, y }
-			}
-		}));
+		activeWindow.element.style.left = `${x}px`;
+		activeWindow.element.style.top = `${y}px`;
 	}
 }
