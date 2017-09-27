@@ -10,10 +10,10 @@ export type Props = {
 const stopPropagation = (e: React.SyntheticEvent<HTMLElement>) => e.stopPropagation();
 
 const getMaximizeToggleAction = (window: Props['window']): WindowAction =>
-	window.position.isMaximized ? WindowAction.Restore : WindowAction.Maximize;
+	window.position.state === 'MAXIMIZED' ? WindowAction.Restore : WindowAction.Maximize;
 
 const getMaximizeToggleClassName = (window: Props['window']): string =>
-	window.position.isMaximized ? 'fa fa-window-restore' : 'fa fa-window-maximize';
+	window.position.state === 'MAXIMIZED' ? 'fa fa-window-restore' : 'fa fa-window-maximize';
 
 const TitleBar: React.SFC<Props> = (props: Props): JSX.Element => (
 	<div className="titlebar" onMouseDown={ props.onMouseDown }>

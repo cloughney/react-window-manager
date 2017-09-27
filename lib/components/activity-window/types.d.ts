@@ -18,8 +18,7 @@ export interface WindowPosition {
     y: number;
     width: number;
     height: number;
-    isMaximized: boolean;
-    isMinimized: boolean;
+    state: 'NORMAL' | 'MAXIMIZED' | 'MINIMIZED';
 }
 export declare type ActivityComponent = React.ComponentType<ActivityProps>;
 export declare type Activity = {

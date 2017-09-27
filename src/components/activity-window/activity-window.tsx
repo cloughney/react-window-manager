@@ -9,26 +9,28 @@ const getActivityWindowStyle = (depth: number, position: WindowPosition): React.
 		overflow: 'hidden'
 	};
 
-	if (position.isMaximized) {
-		styles.top = 0,
-		styles.left =  0,
-		styles.right = 0,
-		styles.bottom =  0
-	} else {
-		styles.top = `${position.y}px`,
-		styles.left =  `${position.x}px`,
-		styles.width =  `${position.width}px`,
-		styles.height =  `${position.height}px`
+	switch (position.state) {
+		case 'MAXIMIZED':
+			return { ...styles, top: 0, left: 0, right: 0, bottom: 0 };
+		case 'MINIMIZED':
+			return styles;
+		case 'NORMAL':
+		default:
+			return {
+				...styles,
+				top: `${position.y}px`,
+				left: `${position.x}px`,
+				width: `${position.width}px`,
+				height: `${position.height}px`
+			};
 	}
-
-	return styles;
 }
 
 export type ActivityWindowProps = ActivityProps & {
 	window: OpenWindow;
 	depth: number;
-	onFocus: (window: OpenWindow, element: HTMLElement) => void;
-	onDragStart: (window: OpenWindow, element: HTMLElement, offset: { x: number, y: number }) => void;
+	onFocus: (window: OpenWindow) => void;
+	onDragStart: (window: OpenWindow, offset: { x: number, y: number }) => void;
 }
 
 export type ActivityWindowState = {
@@ -50,7 +52,7 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 	private get windowClassName(): string {
 		const classList: string[] = ['activity'];
 
-		if (this.props.window.position.isMaximized) {
+		if (this.props.window.position.state === 'MAXIMIZED') {
 			classList.push('maximized');
 		}
 
@@ -87,7 +89,7 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 	}
 
 	private onDragStart = (e: React.MouseEvent<HTMLElement>): void => {
-		if (this.props.window.position.isMaximized || !this.element) { return; }
+		if (this.props.window.position.state !== 'NORMAL' || !this.element) { return; }
 		e.preventDefault();
 
 		const offset = {
@@ -96,14 +98,14 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 		};
 
 		this.setState({ isMoving: true });
-		this.props.onDragStart(this.props.window, this.element, offset);
+		this.props.onDragStart(this.props.window, offset);
 	}
 
 	private onMouseDown = (e: React.MouseEvent<any>): void => {
 		if (!this.element) { return; }
 
 		if (this.props.depth !== 0) {
-			this.props.onFocus(this.props.window, this.element);
+			this.props.onFocus(this.props.window);
 		}
 	}
 

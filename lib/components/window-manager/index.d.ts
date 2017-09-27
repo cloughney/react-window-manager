@@ -5,8 +5,7 @@ export declare type WindowManagerProps = {
     availableActivities: Activity[];
     openWindows: OpenWindow[];
 };
-export declare type ActiveWindow = OpenWindow & {
-    element: HTMLElement;
+export declare type ActiveWindowDetails = {
     isMoving: boolean;
     mouseOffset: {
         x: number;
@@ -16,7 +15,7 @@ export declare type ActiveWindow = OpenWindow & {
 export declare type WindowManagerState = {
     availableActivities: Activity[];
     openWindows: OpenWindow[];
-    activeWindow?: ActiveWindow;
+    activeWindow?: ActiveWindowDetails;
 };
 export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
     constructor(props: WindowManagerProps);
@@ -27,5 +26,4 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
     private onMouseUp;
     private onMouseMove;
     private onWindowAction;
-    private setActiveWindowPosition(positionUpdates, windowUpdates?);
 }

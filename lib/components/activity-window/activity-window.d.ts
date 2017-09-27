@@ -4,8 +4,8 @@ import { ActivityProps, OpenWindow } from './types';
 export declare type ActivityWindowProps = ActivityProps & {
     window: OpenWindow;
     depth: number;
-    onFocus: (window: OpenWindow, element: HTMLElement) => void;
-    onDragStart: (window: OpenWindow, element: HTMLElement, offset: {
+    onFocus: (window: OpenWindow) => void;
+    onDragStart: (window: OpenWindow, offset: {
         x: number;
         y: number;
     }) => void;

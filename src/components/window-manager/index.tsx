@@ -7,9 +7,7 @@ export type WindowManagerProps = {
 	//onWindowAction: (action: WindowAction, window: OpenWindow, options?: any) => void; //TODO types for options
 }
 
-export type ActiveWindow = {
-	window: OpenWindow;
-	element: HTMLElement;
+export type ActiveWindowDetails = {
 	isMoving: boolean;
 	mouseOffset: { x: number, y: number };
 }
@@ -17,7 +15,7 @@ export type ActiveWindow = {
 export type WindowManagerState = {
 	availableActivities: Activity[];
 	openWindows: OpenWindow[];
-	activeWindow?: ActiveWindow;
+	activeWindow?: ActiveWindowDetails;
 }
 
 const defaultPosition: WindowPosition = {
@@ -25,23 +23,26 @@ const defaultPosition: WindowPosition = {
 	y: 0,
 	width: 500,
 	height: 300,
-	isMaximized: true,
-	isMinimized: false
+	state: 'MAXIMIZED'
 };
 
 export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
 	public constructor(props: WindowManagerProps) {
 		super(props);
-		this.state = {
-			availableActivities: props.availableActivities || [],
-			openWindows: props.openWindows || [],
-			activeWindow: undefined
+
+		const availableActivities = props.availableActivities || [];
+		const openWindows = props.openWindows || [];
+		const activeWindow = {
+			isMoving: false,
+			mouseOffset: { x: 0, y: 0 }
 		};
+
+		this.state = { availableActivities, openWindows, activeWindow };
 	}
 
 	public render(): JSX.Element {
 		const openWindows = this.state.openWindows
-			.filter(x => !x.position.isMinimized)
+			.filter(x => x.position.state !== 'MINIMIZED')
 			.map((openWindow, i) => (
 				<ActivityWindow
 					key={ i } depth={ i } window={ openWindow }
@@ -52,7 +53,7 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 				));
 
 		const dockedWindows = this.state.openWindows
-			.filter(x => x.position.isMinimized)
+			.filter(x => x.position.state === 'MINIMIZED')
 			.map((openWindow, i) => (
 				<li onClick={ () => { this.onWindowAction(WindowAction.Restore, openWindow) } } key={ i }>
 					<button>
@@ -85,26 +86,23 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 		}
 	}
 
-	private onWindowFocus = (openWindow: OpenWindow, element: HTMLElement): void => {
+	private onWindowFocus = (openWindow: OpenWindow): void => {
 		this.setState(state => ({
 			openWindows: [
 				openWindow,
 				...state.openWindows.filter(x => x !== openWindow)
 			],
 			activeWindow: {
-				window: openWindow,
-				element,
 				isMoving: false,
 				mouseOffset: { x: 0, y: 0 }
 			}
 		}));
 	}
 
-	private onWindowDragStart = (openWindow: OpenWindow, element: HTMLElement, mouseOffset: { x: number, y: number }): void => {
+	private onWindowDragStart = (openWindow: OpenWindow, mouseOffset: { x: number, y: number }): void => {
 		this.setState(state => ({
 			activeWindow: {
 				...state.activeWindow,
-				element,
 				isMoving: true,
 				mouseOffset
 			}
@@ -113,7 +111,7 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 
 	private onMouseUp = (e: MouseEvent): void => {
 		const activeWindow = this.state.activeWindow;
-		if (!activeWindow || !activeWindow.isMoving || !activeWindow.element) {
+		if (!activeWindow || !activeWindow.isMoving) {
 			return;
 		}
 
@@ -122,12 +120,22 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 		const x = e.clientX - activeWindow.mouseOffset.x;
 		const y = e.clientY - activeWindow.mouseOffset.y;
 
-		this.setActiveWindowPosition({ x, y }, { isMoving: false, mouseOffset: { x: 0, y: 0 } });
+		this.setState(state => ({
+			openWindows: [
+				{ ...state.openWindows[0], position: { ...state.openWindows[0].position, x, y } },
+				...state.openWindows.slice(1)
+			],
+			activeWindow: {
+				...state.activeWindow,
+				isMoving: false,
+				mouseOffset: { x: 0, y: 0 }
+			}
+		}));
 	}
 
 	private onMouseMove = (e: MouseEvent): void => {
 		const activeWindow = this.state.activeWindow;
-		if (!activeWindow || !activeWindow.isMoving || !activeWindow.element) {
+		if (!activeWindow || !activeWindow.isMoving) {
 			return;
 		}
 		
@@ -136,8 +144,12 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 		const x = e.clientX - activeWindow.mouseOffset.x;
 		const y = e.clientY - activeWindow.mouseOffset.y;
 
-		activeWindow.element.style.left = `${x}px`;
-		activeWindow.element.style.top = `${y}px`;
+		this.setState(state => ({
+			openWindows: [
+				{ ...state.openWindows[0], position: { ...state.openWindows[0].position, x, y } },
+				...state.openWindows.slice(1)
+			]
+		}));
 	}
 
 	private onWindowAction = (action: WindowAction, openWindow: OpenWindow, options?: any): void => {
@@ -153,39 +165,31 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 					]
 				}));
 			case WindowAction.Close:
-				return this.setState(state => ({
+				return this.setState(state => ({ 
 					openWindows: state.openWindows.filter(x => x !== openWindow)
 				}));
 
 			case WindowAction.Restore:
-				return this.setActiveWindowPosition({ isMaximized: false, isMinimized: false });
+				return this.setState(state => ({
+					openWindows: [
+						{ ...openWindow, position: { ...openWindow.position, state: 'NORMAL' } },
+						...state.openWindows.filter(x => x !== openWindow)
+					]
+				}));
 			case WindowAction.Maximize:
-				return this.setActiveWindowPosition({ isMaximized: true, isMinimized: false });
+				return this.setState(state => ({
+					openWindows: [
+						{ ...openWindow, position: { ...openWindow.position, state: 'MAXIMIZED' } },
+						...state.openWindows.filter(x => x !== openWindow)
+					]
+				}));
 			case WindowAction.Minimize:
-				return this.setActiveWindowPosition({ isMaximized: false, isMinimized: true });
+				return this.setState(state => ({
+					openWindows: [
+						...state.openWindows.filter(x => x !== openWindow),
+						{ ...openWindow, position: { ...openWindow.position, state: 'MINIMIZED' } }
+					]
+				}));
 		}
-	}
-
-	private setActiveWindowPosition(positionUpdates: Partial<WindowPosition>, windowUpdates?: Partial<ActiveWindow>): void {
-		this.setState(state => {
-			if (!state.activeWindow) {
-				return;
-			}
-
-			const activeWindow = state.activeWindow;
-			const position = { ...activeWindow.window.position, ...positionUpdates };
-
-			return {
-				activeWindow: {
-					...activeWindow,
-					...windowUpdates,
-					position
-				},
-				openWindows: state.openWindows.map(openWindow => {
-					if (openWindow !== activeWindow.window) { return openWindow; }
-					return { ...openWindow, position };
-				})
-			};
-		});
 	}
 }
