@@ -23,7 +23,7 @@ const defaultPosition: WindowPosition = {
 	y: 0,
 	width: 500,
 	height: 300,
-	state: 'MAXIMIZED'
+	state: 'NORMAL'
 };
 
 export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
