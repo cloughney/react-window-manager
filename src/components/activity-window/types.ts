@@ -28,6 +28,7 @@ export type Activity = {
 	title: string;
 	icon?: string;
 	component: ActivityComponent;
+	attributes?: { [key: string]: string };
 }
 
 export interface OpenWindow {

@@ -19,10 +19,10 @@ export type WindowManagerState = {
 }
 
 const defaultPosition: WindowPosition = {
-	x: 0,
-	y: 0,
-	width: 500,
-	height: 300,
+	x: 50,
+	y: 25,
+	width: 640,
+	height: 480,
 	state: 'NORMAL'
 };
 
