@@ -10,6 +10,7 @@ export type WindowManagerProps = {
 export type ActiveWindowDetails = {
 	isMoving: boolean;
 	mouseOffset: { x: number, y: number };
+	windowSize: { width: number, height: number };
 }
 
 export type WindowManagerState = {
@@ -27,6 +28,8 @@ const defaultPosition: WindowPosition = {
 };
 
 export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
+	private element?: HTMLElement | null;
+
 	public constructor(props: WindowManagerProps) {
 		super(props);
 
@@ -34,7 +37,8 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 		const openWindows = props.openWindows || [];
 		const activeWindow = {
 			isMoving: false,
-			mouseOffset: { x: 0, y: 0 }
+			mouseOffset: { x: 0, y: 0 },
+			windowSize: { width: 0, height: 0 }
 		};
 
 		this.state = { availableActivities, openWindows, activeWindow };
@@ -64,7 +68,7 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 			));
 
 		return (
-			<div>
+			<div ref={ x => { this.element = x; } }>
 				{ openWindows }
 				<ul className="dock">
 					{ dockedWindows }
@@ -104,7 +108,11 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 			activeWindow: {
 				...state.activeWindow,
 				isMoving: true,
-				mouseOffset
+				mouseOffset,
+				windowSize: {
+					width: openWindow.position.width,
+					height: openWindow.position.height
+				}
 			}
 		}));
 	}
@@ -122,13 +130,20 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 
 		this.setState(state => ({
 			openWindows: [
-				{ ...state.openWindows[0], position: { ...state.openWindows[0].position, x, y } },
+				{
+					...state.openWindows[0],
+					position: {
+						...state.openWindows[0].position,
+						...this.getBoundedCoordinates(x, y)
+					} 
+				},
 				...state.openWindows.slice(1)
 			],
 			activeWindow: {
 				...state.activeWindow,
 				isMoving: false,
-				mouseOffset: { x: 0, y: 0 }
+				mouseOffset: { x: 0, y: 0 },
+				windowSize: { width: 0, height: 0 }
 			}
 		}));
 	}
@@ -146,7 +161,13 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 
 		this.setState(state => ({
 			openWindows: [
-				{ ...state.openWindows[0], position: { ...state.openWindows[0].position, x, y } },
+				{
+					...state.openWindows[0],
+					position: {
+						...state.openWindows[0].position,
+						...this.getBoundedCoordinates(x, y)
+					}
+				},
 				...state.openWindows.slice(1)
 			]
 		}));
@@ -191,5 +212,31 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 					]
 				}));
 		}
+	}
+
+	private getBoundedCoordinates(x: number, y: number): { x: number, y: number } {
+		if (!this.state.activeWindow || !this.element) {
+			return { x: 0, y: 0 };
+		}
+		
+		const containerWidth = this.element.clientWidth;
+		const containerHeight = this.element.clientHeight;
+		const windowWidth = this.state.activeWindow.windowSize.width;
+		const windowHeight = this.state.activeWindow.windowSize.height;
+
+		console.log({ containerWidth, containerHeight });
+		console.log({ windowWidth, windowHeight });
+
+		const [ minX, maxX, minY, maxY ] = [
+			0, containerWidth - windowWidth,
+			0, containerHeight - windowHeight
+		];
+
+		x = x >= minX ? x : minX;
+		x = x <= maxX ? x : maxX;
+		y = y >= minY ? y : minY;
+		y = y <= maxY ? y : maxY;
+
+		return { x, y };
 	}
 }

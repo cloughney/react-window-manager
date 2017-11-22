@@ -11,6 +11,10 @@ export declare type ActiveWindowDetails = {
         x: number;
         y: number;
     };
+    windowSize: {
+        width: number;
+        height: number;
+    };
 };
 export declare type WindowManagerState = {
     availableActivities: Activity[];
@@ -18,6 +22,7 @@ export declare type WindowManagerState = {
     activeWindow?: ActiveWindowDetails;
 };
 export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
+    private element?;
     constructor(props: WindowManagerProps);
     render(): JSX.Element;
     componentDidUpdate(props: WindowManagerProps, state: WindowManagerState): void;
@@ -26,4 +31,5 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
     private onMouseUp;
     private onMouseMove;
     private onWindowAction;
+    private getBoundedCoordinates(x, y);
 }
