@@ -22,6 +22,7 @@ export declare type WindowManagerState = {
     activeWindow?: ActiveWindowDetails;
 };
 export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
+    private windowCount;
     private element?;
     constructor(props: WindowManagerProps);
     render(): JSX.Element;

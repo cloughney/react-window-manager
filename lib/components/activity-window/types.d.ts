@@ -31,6 +31,7 @@ export declare type Activity = {
     };
 };
 export interface OpenWindow {
+    key: string;
     activity: Activity;
     position: WindowPosition;
 }

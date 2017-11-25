@@ -28,6 +28,7 @@ const defaultPosition: WindowPosition = {
 };
 
 export default class WindowManager extends React.Component<WindowManagerProps, WindowManagerState> {
+	private windowCount: number;
 	private element?: HTMLElement | null;
 
 	public constructor(props: WindowManagerProps) {
@@ -41,6 +42,7 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 			windowSize: { width: 0, height: 0 }
 		};
 
+		this.windowCount = 0;
 		this.state = { availableActivities, openWindows, activeWindow };
 	}
 
@@ -49,7 +51,7 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 			.filter(x => x.position.state !== 'MINIMIZED')
 			.map((openWindow, i) => (
 				<ActivityWindow
-					key={ i } depth={ i } window={ openWindow }
+					key={ openWindow.key } depth={ i } window={ openWindow }
 					availableActivities={ this.state.availableActivities }
 					onFocus={ this.onWindowFocus }
 					onDragStart={ this.onWindowDragStart }
@@ -179,6 +181,7 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 				return this.setState(state => ({
 					openWindows: [
 						{
+							key: `${ ++this.windowCount }`,
 							activity: options.activity,
 							position: { ...defaultPosition }
 						},
