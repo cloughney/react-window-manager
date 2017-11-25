@@ -97,11 +97,7 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 			openWindows: [
 				openWindow,
 				...state.openWindows.filter(x => x !== openWindow)
-			],
-			activeWindow: {
-				isMoving: false,
-				mouseOffset: { x: 0, y: 0 }
-			}
+			]
 		}));
 	}
 

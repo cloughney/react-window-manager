@@ -89,8 +89,9 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 	}
 
 	private onDragStart = (e: React.MouseEvent<HTMLElement>): void => {
-		if (this.props.window.position.state !== 'NORMAL' || !this.element) { return; }
-		e.preventDefault();
+		if (this.props.window.position.state !== 'NORMAL' || !this.element) {
+			return;
+		}
 
 		const offset = {
 			x: e.clientX - this.element.offsetLeft,
@@ -107,8 +108,6 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 		if (this.props.depth !== 0) {
 			this.props.onFocus(this.props.window);
 		}
-
-		this.onDragStart(e);
 	}
 
 	private onMouseOver = (e: React.MouseEvent<any>): void => {
