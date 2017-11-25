@@ -107,6 +107,8 @@ export default class ActivityWindow extends React.Component<ActivityWindowProps,
 		if (this.props.depth !== 0) {
 			this.props.onFocus(this.props.window);
 		}
+
+		this.onDragStart(e);
 	}
 
 	private onMouseOver = (e: React.MouseEvent<any>): void => {

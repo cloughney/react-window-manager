@@ -224,9 +224,6 @@ export default class WindowManager extends React.Component<WindowManagerProps, W
 		const windowWidth = this.state.activeWindow.windowSize.width;
 		const windowHeight = this.state.activeWindow.windowSize.height;
 
-		console.log({ containerWidth, containerHeight });
-		console.log({ windowWidth, windowHeight });
-
 		const [ minX, maxX, minY, maxY ] = [
 			0, containerWidth - windowWidth,
 			0, containerHeight - windowHeight
